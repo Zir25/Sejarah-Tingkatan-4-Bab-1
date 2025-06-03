@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8" />
+<title>Kuiz Sejarah Tingkatan 4 Bab 1 - 2 Peserta Serentak</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; padding: 10px; }
+  h2 { text-align: center; }
+  .hidden { display: none; }
+  .player-section { border: 1px solid #ccc; margin-bottom: 15px; padding: 15px; }
+  label { font-weight: bold; }
+  input[type="text"], input[type="password"], input[type="number"] { width: 90%; padding: 6px; margin: 6px 0 12px 0; }
+  button { padding: 8px 15px; margin: 5px 0; font-size: 1rem; cursor: pointer; }
+  .quiz-area { margin-top: 10px; }
+  #winner { font-size: 1.3rem; color: green; font-weight: bold; text-align: center; margin-top: 30px; }
+  #controlPanel { text-align: center; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+
+<h2>Kuiz Sejarah Tingkatan 4: Warisan Negara Bangsa (Bab 1) - 2 Peserta Serentak</h2>
+
+<div id="controlPanel">
+  <label for="teacherPassword">Masukkan Password Guru:</label><br/>
+  <input type="password" id="teacherPassword" placeholder="Password Guru" />
+  <br/>
+  <label for="numQuestions">Bilangan Soalan untuk setiap peserta (1-100):</label><br/>
+  <input type="number" id="numQuestions" min="1" max="100" value="10" />
+  <br/>
+  <button id="btnVerifyPassword">Sahkan Password & Mulakan Kuiz</button>
+</div>
+
+<div id="playersContainer" class="hidden"></div>
+
+<div style="text-align:center; margin-top:20px;" class="hidden" id="btnArea">
+  <button id="btnResetAll">Reset Semua Kuiz</button>
+  <button id="btnDownloadCSV">Muat Turun Markah CSV</button>
+</div>
+
+<div id="winner" class="hidden"></div>
+
+<script>
+const GURU_PASSWORD = "sejarah2025";
+
+const questions = [
+{"question":"Kerajaan manakah yang mewarisi ciri-ciri negara bangsa daripada kerajaan Alam Melayu sebelum kedatangan Barat?","A":"Kerajaan Srivijaya","B":"Kerajaan Majapahit","answer":"A"},
+{"question":"Ciri-ciri negara bangsa kerajaan Alam Melayu termasuk:","A":"Raja, undang-undang, wilayah pengaruh, rakyat","B":"Raja, demokrasi, wilayah pengaruh, rakyat","answer":"A"},
+{"question":"Wilayah pengaruh kerajaan Funan meliputi:","A":"Sungai Mekong, Teluk Cam Ranh, selatan Myanmar, Semenanjung Kra","B":"Sungai Mekong, Teluk Cam Ranh, utara Myanmar, Semenanjung Kra","answer":"A"},
+{"question":"Raja dalam kerajaan Alam Melayu dianggap sebagai:","A":"Pemerintah suci dan berkuasa mutlak","B":"Pemerintah biasa tanpa kuasa mutlak","answer":"A"},
+{"question":"Undang-undang kerajaan Majapahit dipanggil:","A":"Kitab Manawa","B":"Hukum Kanun Melaka","answer":"A"},
+{"question":"Apakah fungsi utama sistem pentadbiran dalam kerajaan Melaka?","A":"Menjamin kelancaran pemerintahan","B":"Menggalakkan perdagangan asing sahaja","answer":"A"},
+{"question":"Apakah nama sistem pembesar utama dalam Kesultanan Melayu Melaka?","A":"Pembesar Empat Lipatan","B":"Pembesar Tiga Lipatan","answer":"A"},
+{"question":"Peranan Bendahara dalam Kesultanan Melayu Melaka adalah:","A":"Ketua pentadbir dan ketua tentera","B":"Ketua peniaga dan pengurus cukai","answer":"A"},
+{"question":"Undang-undang bertulis yang digunakan dalam Kesultanan Melayu Melaka ialah:","A":"Hukum Kanun Melaka dan Undang-Undang Laut Melaka","B":"Undang-Undang Laut Melaka dan Kitab Manawa","answer":"A"},
+{"question":"Apakah kepentingan lambang kebesaran Kesultanan Melayu Melaka?","A":"Menunjukkan kedaulatan Sultan","B":"Menunjukkan kekayaan kerajaan","answer":"B"},
+{"question":"Apakah maksud \"kedaulatan\" dalam konteks Kesultanan Melayu Melaka?","A":"Hak mutlak Sultan mengawal rakyat dan wilayah","B":"Hak rakyat mengawal Sultan","answer":"A"},
+{"question":"Siapakah yang bertanggungjawab mengutip cukai di pelabuhan Melaka?","A":"Syahbandar","B":"Laksamana","answer":"A"},
+{"question":"Apakah peranan Temenggung dalam Kesultanan Melayu Melaka?","A":"Menjaga keselamatan kota Melaka","B":"Memimpin angkatan laut","answer":"A"},
+{"question":"Undang-undang Laut Melaka mengandungi peraturan mengenai:","A":"Jenayah di atas kapal dan pelayaran","B":"Jenayah di darat sahaja","answer":"A"},
+{"question":"Nakhoda dalam undang-undang laut Melaka mempunyai kuasa seperti:","A":"Raja dalam pelayaran","B":"Pembesar di darat","answer":"A"},
+{"question":"Apakah maksud \"waadat\" dalam hubungan antara pemerintah dan rakyat?","A":"Perjanjian antara pemerintah dan rakyat","B":"Perang antara kerajaan","answer":"A"},
+{"question":"Mengapa rakyat perlu taat setia kepada Sultan?","A":"Untuk memastikan keharmonian dan kesejahteraan","B":"Untuk mengelakkan cukai tinggi","answer":"A"},
+{"question":"Apakah golongan rakyat yang wujud dalam Kesultanan Melayu Melaka?","A":"Golongan merdeka dan hamba","B":"Golongan bangsawan sahaja","answer":"A"},
+{"question":"Peranan Laksamana adalah:","A":"Panglima angkatan laut Melaka","B":"Ketua pembesar negeri","answer":"A"},
+{"question":"Apakah undang-undang yang mengawal urusan perdagangan Melaka?","A":"Hukum Kanun Melaka","B":"Undang-Undang Laut Melaka","answer":"A"},
+{"question":"Siapakah yang paling lama berkhidmat sebagai Bendahara dalam Kesultanan Melayu Melaka?","A":"Tun Perak","B":"Tun Fatimah","answer":"A"},
+{"question":"Apakah fungsi Penghulu Bendahari?","A":"Mengurus perbendaharaan kerajaan","B":"Memimpin tentera laut","answer":"A"},
+{"question":"Sistem pentadbiran Kesultanan Melayu Melaka dibahagikan kepada:","A":"Pusat dan jajahan","B":"Pusat dan luar negara","answer":"A"},
+{"question":"Apakah yang dilakukan pembesar di peringkat jajahan?","A":"Menjaga keamanan dan mengutip cukai","B":"Menjalankan perdagangan antarabangsa","answer":"A"},
+{"question":"Wilayah taklukan Kesultanan Melayu Melaka termasuk:","A":"Pahang, Kelantan, Rokan","B":"Kedah, Patani, Siantan","answer":"A"},
+{"question":"Wilayah naungan ialah wilayah yang diperoleh melalui:","A":"Perkahwinan atau persahabatan","B":"Peperangan sahaja","answer":"A"},
+{"question":"Apakah yang dimaksudkan dengan \"lambang kebesaran\"?","A":"Simbol identiti dan kedaulatan Sultan","B":"Nama rasmi kerajaan","answer":"A"},
+{"question":"Apakah ciri utama negara bangsa Kesultanan Melayu Melaka?","A":"Kerajaan, rakyat, kedaulatan, wilayah pengaruh, undang-undang, lambang kebesaran","B":"Kerajaan, undang-undang, demokrasi, wilayah pengaruh","answer":"A"},
+{"question":"Apakah tujuan utama pengenalan undang-undang Melaka?","A":"Menjamin kemakmuran dan kesejahteraan","B":"Mengawal perdagangan asing sahaja","answer":"A"},
+{"question":"Apakah maksud \"raja\" dalam kerajaan Alam Melayu?","A":"Pemerintah tertinggi yang ditaati rakyat","B":"Ketua suku yang memerintah kecil","answer":"A"},
+{"question":"Apakah sumber pendapatan Kesultanan Melayu Melaka?","A":"Perdagangan, cukai, ufti wilayah taklukan","B":"Hasil pertanian sahaja","answer":"A"},
+{"question":"Siapakah yang bertanggungjawab menjaga keselamatan kota Melaka?","A":"Temenggung","B":"Laksamana","answer":"A"},
+{"question":"Apakah fungsi Syahbandar?","A":"Mengutip cukai di pelabuhan","B":"Menguruskan undang-undang","answer":"A"},
+{"question":"Apakah unsur yang memupuk perpaduan rakyat dalam Kesultanan Melayu Melaka?","A":"Hubungan timbal balik antara pemerintah dan rakyat","B":"Cukai yang tinggi","answer":"A"},
+{"question":"Apakah undang-undang yang membincangkan jenayah dan kekeluargaan dalam Melaka?","A":"Hukum Kanun Melaka","B":"Undang-Undang Laut Melaka","answer":"A"},
+{"question":"Dalam undang-undang laut Melaka, apakah hukuman bagi pembunuhan di atas kapal?","A":"Hukuman mati","B":"Denda sahaja","answer":"A"},
+{"question":"Apakah peranan Malim dalam undang-undang laut Melaka?","A":"Mengetahui keadaan ombak dan arus","B":"Menjadi ketua angkatan laut","answer":"A"},
+{"question":"Apakah yang dimaksudkan dengan \"sistem kerah\" dalam masyarakat Melaka?","A":"Sistem menyumbang tenaga kerja secara paksa","B":"Sistem cukai tanah","answer":"A"},
+{"question":"Siapakah yang mewakili golongan pemerintah dalam Kesultanan Melayu Melaka?","A":"Sultan, pembesar, kerabat raja, ulama","B":"Golongan petani dan nelayan","answer":"A"},
+{"question":"Apakah kepentingan perjanjian waadat?","A":"Memelihara hubungan baik antara pemerintah dan rakyat","B":"Mengagihkan cukai","answer":"A"},
+{"question":"Siapakah yang mengetuai hubungan diplomatik dalam Kesultanan Melayu Melaka?","A":"Sultan","B":"Bendahara","answer":"A"},
+{"question":"Apakah ciri pentadbiran kerajaan Srivijaya yang diwarisi oleh Melaka?","A":"Raja, undang-undang, wilayah pengaruh, rakyat","B":"Raja, demokrasi, wilayah pengaruh, rakyat","answer":"A"},
+{"question":"Apakah maksud \"Hukum Kanun Melaka\"?","A":"Undang-undang bertulis yang mengatur jenayah, kekeluargaan, ekonomi","B":"Undang-undang laut sahaja","answer":"A"},
+{"question":"Apakah fungsi Laksamana dalam Kesultanan Melayu Melaka?","A":"Panglima angkatan laut","B":"Ketua pembesar daerah","answer":"A"},
+{"question":"Apakah maksud \"Pembesar Empat Lipatan\"?","A":"Empat pembesar utama dalam pentadbiran Melaka","B":"Empat pembesar di jajahan Melaka","answer":"A"},
+{"question":"Apakah tujuan pelantikan Pembesar Berempat oleh Sultan?","A":"Mentadbir wilayah pegangan","B":"Menguruskan perdagangan","answer":"A"},
+{"question":"Apakah isi kandungan Undang-Undang Laut Melaka?","A":"Peranan nakhoda, pelayaran, jenayah di kapal, percukaian","B":"Hukum keluarga dan ekonomi","answer":"A"},
+{"question":"Mengapakah rakyat Melaka terdiri daripada golongan merdeka dan hamba?","A":"Untuk memastikan kesejahteraan dan kestabilan masyarakat","B":"Untuk mengasingkan masyarakat","answer":"A"},
+{"question":"Apakah contoh wilayah taklukan Kesultanan Melayu Melaka?","A":"Pahang dan Kelantan","B":"Kedah dan Patani","answer":"A"},
+{"question":"Siapakah yang memimpin angkatan tentera laut Melaka?","A":"Laksamana","B":"Temenggung","answer":"A"},
+{"question":"Undang-undang Melaka mempunyai dua jenis iaitu:","A":"Hukum Kanun Melaka dan Undang-Undang Laut Melaka","B":"Hukum Kanun Melaka dan Undang-Undang Darat Melaka","answer":"A"},
+{"question":"Apakah tindakan terhadap orang yang membunuh tanpa pengetahuan raja dalam Hukum Kanun Melaka?","A":"Dihukum bunuh","B":"Denda sahaja","answer":"A"},
+{"question":"Dalam Undang-Undang Laut Melaka, nakhoda harus mendapat persetujuan jika mahu singgah di tempat baru.","A":"Betul","B":"Salah","answer":"A"},
+{"question":"Siapakah yang bertanggungjawab menguruskan perbendaharaan Melaka?","A":"Penghulu Bendahari","B":"Bendahara","answer":"A"},
+{"question":"Apakah lambang kebesaran yang digunakan untuk mengesahkan arahan Sultan?","A":"Cap mohor","B":"Nobat sahaja","answer":"A"},
+{"question":"Apakah yang dimaksudkan dengan \"wilayah naungan\"?","A":"Wilayah yang menerima ketuanan melalui perkawinan atau persahabatan","B":"Wilayah yang ditakluk melalui peperangan","answer":"A"},
+{"question":"Apakah maksud \"rakyat\" dalam kerajaan Melaka?","A":"Penduduk yang setia dan mematuhi Sultan","B":"Penduduk asing sahaja","answer":"A"},
+{"question":"Peranan pembesar dalam jajahan termasuk:","A":"Menjaga keamanan dan mengutip cukai","B":"Memimpin angkatan laut","answer":"A"},
+{"question":"Apakah peranan Sultan dalam Kesultanan Melayu Melaka?","A":"Menaungi rakyat, menjaga keselamatan dan memperkenalkan undang-undang","B":"Menguruskan perdagangan sahaja","answer":"A"},
+{"question":"Mengapa undang-undang Melaka dicipta?","A":"Untuk melindungi rakyat dan mengukuhkan kerajaan","B":"Untuk mengawal perdagangan asing sahaja","answer":"A"},
+{"question":"Apakah peranan rakyat dalam sistem pemerintahan Melaka?","A":"Menunjukkan taat setia, menjadi tentera, mematuhi undang-undang","B":"Menyertai perdagangan antarabangsa sahaja","answer":"A"},
+{"question":"Peranan Temenggung dalam keselamatan adalah:","A":"Menjaga kota Melaka","B":"Memimpin angkatan laut","answer":"A"},
+{"question":"Apakah yang dimaksudkan dengan \"kesejahteraan rakyat\"?","A":"Kehidupan yang aman dan makmur","B":"Kehidupan yang penuh cukai","answer":"A"},
+{"question":"Siapakah yang membantu Sultan dalam pentadbiran?","A":"Pembesar dan kerabat raja","B":"Golongan petani","answer":"A"},
+{"question":"Apa maksud \"lambang kebesaran\"?","A":"Simbol identiti kerajaan dan Sultan","B":"Hiasan istana sahaja","answer":"A"},
+{"question":"Wilayah pengaruh Melaka meliputi:","A":"Semenanjung Tanah Melayu dan pantai timur Sumatera","B":"Semenanjung Tanah Melayu dan utara Sumatera","answer":"A"},
+{"question":"Apa maksud \"Hukum Kanun Melaka\"?","A":"Undang-undang bertulis kerajaan Melaka","B":"Undang-undang adat sahaja","answer":"A"},
+{"question":"Apakah isi Fasal 30 dalam Hukum Kanun Melaka?","A":"Riba diharamkan dalam perniagaan","B":"Riba dibenarkan dalam perniagaan","answer":"A"},
+{"question":"Peranan Syahbandar adalah:","A":"Mengutip cukai di pelabuhan","B":"Memimpin angkatan laut","answer":"A"},
+{"question":"Siapakah yang bertanggungjawab sebagai ketua pentadbir kerajaan?","A":"Bendahara","B":"Temenggung","answer":"A"},
+{"question":"Apakah peranan Nakhoda dalam undang-undang laut Melaka?","A":"Memimpin kapal dan mematuhi undang-undang","B":"Mengutip cukai darat","answer":"A"},
+{"question":"Dalam Hukum Kanun Melaka, siapakah yang tidak boleh menjadi saksi pernikahan?","A":"Hamba abdi dan wanita","B":"Lelaki dewasa","answer":"A"},
+{"question":"Apakah yang dimaksudkan dengan \"pemegang kawasan pegangan\"?","A":"Pembesar yang diberi kuasa mentadbir wilayah","B":"Pedagang asing","answer":"A"},
+{"question":"Mengapa waadat penting dalam hubungan pemerintah dan rakyat?","A":"Memastikan kesetiaan dan kerjasama","B":"Mengagihkan cukai","answer":"A"},
+{"question":"Apa maksud \"kepemimpinan\"?","A":"Keupayaan memimpin untuk kemakmuran negara","B":"Mengawal perdagangan","answer":"A"},
+{"question":"Siapakah yang mengutip cukai di kawasan jajahan?","A":"Pembesar daerah","B":"Nakhoda","answer":"A"},
+{"question":"Apakah maksud \"Undang-Undang Laut Melaka\"?","A":"Undang-undang yang mengawal pelayaran dan jenayah kapal","B":"Undang-undang keluarga","answer":"A"},
+{"question":"Apakah tindakan terhadap pengingkaran titah Sultan?","A":"Hukuman bunuh","B":"Denda","answer":"A"},
+{"question":"Apa fungsi Temenggung?","A":"Menjaga keamanan kota","B":"Memimpin perdagangan","answer":"A"},
+{"question":"Apa yang dimaksudkan dengan \"kerajaan\"?","A":"Sistem pemerintahan dengan Raja sebagai pemimpin","B":"Satu kelompok pedagang","answer":"A"},
+{"question":"Apakah yang dimaksudkan dengan \"peranan rakyat\"?","A":"Menunjukkan taat setia dan mematuhi undang-undang","B":"Melakukan perdagangan","answer":"A"},
+{"question":"Apakah peranan Sultan dalam hubungan diplomatik?","A":"Mengukuhkan hubungan antarabangsa","B":"Menguruskan cukai sahaja","answer":"A"},
+{"question":"Apakah tujuan undang-undang laut Melaka?","A":"Menjamin keselamatan pelayaran","B":"Menjamin keselamatan darat sahaja","answer":"A"},
+{"question":"Apakah kepentingan pentadbiran yang tersusun?","A":"Menjamin kelancaran pemerintahan","B":"Mengawal perdagangan asing","answer":"A"},
+{"question":"Apakah maksud \"rakyat\" dalam negara bangsa?","A":"Penduduk setia kepada Raja","B":"Pendatang asing","answer":"A"},
+{"question":"Apakah simbol kekuasaan Sultan?","A":"Lambang kebesaran seperti nobat dan cap mohor","B":"Senjata","answer":"A"},
+{"question":"Siapakah yang bertugas sebagai ketua angkatan laut?","A":"Laksamana","B":"Temenggung","answer":"A"},
+{"question":"Apakah tujuan perjanjian waadat?","A":"Memelihara hubungan antara pemerintah dan rakyat","B":"Membahagikan wilayah","answer":"A"},
+{"question":"Apakah isi Hukum Kanun Melaka?","A":"Jenayah, kekeluargaan, dan ekonomi","B":"Undang-undang laut sahaja","answer":"A"},
+{"question":"Apakah peranan pembesar dalam jajahan?","A":"Memastikan keamanan dan kutipan cukai","B":"Memimpin tentera","answer":"A"},
+{"question":"Apakah kesan sistem pentadbiran Pembesar Empat Lipatan?","A":"Pentadbiran lancar dan tersusun","B":"Pentadbiran kelam-kabut","answer":"A"},
+{"question":"Apakah hubungan antara pemerintah dan rakyat?","A":"Hubungan timbal balik yang mengukuhkan pemerintahan","B":"Hubungan yang berasingan","answer":"A"},
+{"question":"Apakah maksud \"hamba\" dalam masyarakat Melaka?","A":"Golongan diperintah yang berbeza dengan rakyat merdeka","B":"Golongan pemerintah","answer":"A"},
+{"question":"Apakah maksud \"undang-undang\"?","A":"Peraturan yang mengawal kehidupan rakyat","B":"Tradisi sahaja","answer":"A"},
+{"question":"Apakah fungsi Syahbandar?","A":"Menguruskan pelabuhan dan kutipan cukai","B":"Memimpin tentera laut","answer":"A"},
+{"question":"Apakah peranan Temenggung?","A":"Menjaga keselamatan darat","B":"Mengutip cukai","answer":"A"},
+{"question":"Siapakah yang menjadi ketua turus angkatan tentera?","A":"Bendahara","B":"Laksamana","answer":"A"},
+{"question":"Apakah yang dilakukan oleh rakyat sebagai peranan dalam kerajaan?","A":"Mematuhi arahan dan menjadi tentera","B":"Melakukan perdagangan asing","answer":"A"},
+{"question":"Apakah isi Undang-Undang Laut Melaka?","A":"Peraturan pelayaran dan jenayah kapal","B":"Peraturan kekeluargaan","answer":"A"},
+{"question":"Apakah maksud \"perpaduan rakyat\" dalam negara bangsa?","A":"Kerjasama rakyat untuk kesejahteraan negara","B":"Pertentangan antara rakyat","answer":"A"}
+];
+
+// Randomize jawapan A/B untuk setiap soalan secara rawak
+function randomizeAnswers(questions) {
+  return questions.map(q => {
+    if (Math.random() < 0.5) {
+      return {
+        question: q.question,
+        A: q.B,
+        B: q.A,
+        answer: q.answer === "A" ? "B" : "A"
+      };
+    } else {
+      return {...q};
+    }
+  });
+}
+
+function shuffleArray(arr) {
+  for (let i = arr.length -1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i +1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+const players = [];
+const maxPlayers = 2;
+let numQuestions = 10; // default
+
+function initPlayers() {
+  const container = document.getElementById("playersContainer");
+  container.innerHTML = "";
+  for(let i=0; i < maxPlayers; i++) {
+    const div = document.createElement("div");
+    div.className = "player-section";
+    div.id = "playerSection" + i;
+    div.innerHTML = `
+      <h3>Peserta ${i+1}</h3>
+      <label>Nama:</label><br>
+      <input type="text" id="playerName${i}" placeholder="Masukkan nama anda" />
+      <br>
+      <button id="startBtn${i}">Mula Kuiz</button>
+      <div id="quizArea${i}" class="quiz-area hidden">
+        <p id="questionText${i}"></p>
+        <button id="btnA${i}">A. </button>
+        <button id="btnB${i}">B. </button>
+        <p>Soalan <span id="qNum${i}"></span> daripada <span id="totalQ${i}"></span></p>
+      </div>
+      <div id="result${i}" class="hidden">
+        <p><strong>Nama:</strong> <span id="resName${i}"></span></p>
+        <p><strong>Skor:</strong> <span id="resScore${i}"></span> daripada <span id="resTotal${i}"></span></p>
+      </div>
+    `;
+    container.appendChild(div);
+
+    players[i] = {
+      name: "",
+      shuffledQuestions: [],
+      currentQuestionIndex: 0,
+      score: 0,
+      completed: false
+    };
+
+    document.getElementById("startBtn"+i).addEventListener("click", () => startQuiz(i));
+    document.getElementById("btnA"+i).addEventListener("click", () => answer(i, "A"));
+    document.getElementById("btnB"+i).addEventListener("click", () => answer(i, "B"));
+  }
+}
+
+function startQuiz(i) {
+  const nameInput = document.getElementById("playerName"+i);
+  const name = nameInput.value.trim();
+  if (!name) {
+    alert("Sila masukkan nama peserta.");
+    return;
+  }
+  players[i].name = name;
+  players[i].shuffledQuestions = shuffleArray(randomizeAnswers(questions).slice()).slice(0,numQuestions);
+  players[i].currentQuestionIndex = 0;
+  players[i].score = 0;
+  players[i].completed = false;
+
+  nameInput.disabled = true;
+  document.getElementById("startBtn"+i).disabled = true;
+  document.getElementById("quizArea"+i).classList.remove("hidden");
+  document.getElementById("result"+i).classList.add("hidden");
+
+  showQuestion(i);
+}
+
+function showQuestion(i) {
+  let player = players[i];
+  let q = player.shuffledQuestions[player.currentQuestionIndex];
+  document.getElementById("questionText"+i).textContent = q.question;
+  document.getElementById("btnA"+i).textContent = "A. " + q.A;
+  document.getElementById("btnB"+i).textContent = "B. " + q.B;
+  document.getElementById("qNum"+i).textContent = player.currentQuestionIndex + 1;
+  document.getElementById("totalQ"+i).textContent = player.shuffledQuestions.length;
+}
+
+function answer(i, selected) {
+  let player = players[i];
+  if (selected === player.shuffledQuestions[player.currentQuestionIndex].answer) {
+    player.score++;
+  }
+  player.currentQuestionIndex++;
+  if (player.currentQuestionIndex < player.shuffledQuestions.length) {
+    showQuestion(i);
+  } else {
+    finishQuiz(i);
+  }
+}
+
+function finishQuiz(i) {
+  let player = players[i];
+  player.completed = true;
+  document.getElementById("quizArea"+i).classList.add("hidden");
+  document.getElementById("result"+i).classList.remove("hidden");
+  document.getElementById("resName"+i).textContent = player.name;
+  document.getElementById("resScore"+i).textContent = player.score;
+  document.getElementById("resTotal"+i).textContent = player.shuffledQuestions.length;
+
+  checkAllCompleted();
+}
+
+function checkAllCompleted() {
+  const allDone = players.every(p => p.completed);
+  if (allDone) {
+    document.getElementById("btnArea").classList.remove("hidden");
+    announceWinner();
+  }
+}
+
+function announceWinner() {
+  let highestScore = -1;
+  let winners = [];
+  players.forEach(p => {
+    if (p.score > highestScore) {
+      highestScore = p.score;
+      winners = [p.name];
+    } else if (p.score === highestScore) {
+      winners.push(p.name);
+    }
+  });
+  const winnerDiv = document.getElementById("winner");
+  if (winners.length === 1) {
+    winnerDiv.textContent = `Pemenang adalah: ${winners[0]} dengan skor ${highestScore}!`;
+  } else {
+    winnerDiv.textContent = `Pemenang bersama adalah: ${winners.join(", ")} dengan skor ${highestScore}!`;
+  }
+  winnerDiv.classList.remove("hidden");
+}
+
+function resetAll() {
+  players.forEach((p,i) => {
+    p.name = "";
+    p.completed = false;
+    p.currentQuestionIndex = 0;
+    p.score = 0;
+    p.shuffledQuestions = [];
+
+    let nameInput = document.getElementById("playerName"+i);
+    let startBtn = document.getElementById("startBtn"+i);
+    nameInput.disabled = false;
+    nameInput.value = "";
+    startBtn.disabled = false;
+
+    document.getElementById("quizArea"+i).classList.add("hidden");
+    document.getElementById("result"+i).classList.add("hidden");
+  });
+  document.getElementById("winner").classList.add("hidden");
+  document.getElementById("btnArea").classList.add("hidden");
+}
+
+function downloadCSV() {
+  let csvContent = "data:text/csv;charset=utf-8,";
+  csvContent += "Nama Peserta,Skor,Soalan Keseluruhan\n";
+  players.forEach(p => {
+    csvContent += `${p.name},${p.score},${p.shuffledQuestions.length}\n`;
+  });
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", "markah_kuiz.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+document.getElementById("btnVerifyPassword").addEventListener("click", function() {
+  const pwd = document.getElementById("teacherPassword").value;
+  const numQInput = document.getElementById("numQuestions").value;
+  const numQ = parseInt(numQInput);
+  if (pwd === GURU_PASSWORD) {
+    if (isNaN(numQ) || numQ < 1 || numQ > 100) {
+      alert("Sila masukkan bilangan soalan antara 1 hingga 100.");
+      return;
+    }
+    numQuestions = numQ;
+    alert(`Password disahkan. Kuiz akan dimulakan dengan ${numQuestions} soalan setiap peserta.`);
+    document.getElementById("controlPanel").classList.add("hidden");
+    document.getElementById("playersContainer").classList.remove("hidden");
+    document.getElementById("btnArea").classList.add("hidden");
+    initPlayers();
+  } else {
+    alert("Password salah. Sila cuba lagi.");
+  }
+});
+
+document.getElementById("btnResetAll").addEventListener("click", resetAll);
+document.getElementById("btnDownloadCSV").addEventListener("click", downloadCSV);
+</script>
+
+<div style="text-align:center; margin-top:20px;" class="hidden" id="btnArea">
+  <button id="btnResetAll">Reset Semua Kuiz</button>
+  <button id="btnDownloadCSV">Muat Turun Markah CSV</button>
+</div>
+
+<div id="winner" class="hidden"></div>
+
+</body>
+</html>
